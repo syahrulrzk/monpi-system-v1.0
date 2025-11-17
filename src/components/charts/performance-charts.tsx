@@ -192,7 +192,7 @@ export function PerformanceCharts({ data, timeRange: propTimeRange }: Performanc
             {displayTime}
           </p>
           {payload.map((entry: any, index: number) => {
-            const name = String(entry.name || entry.dataKey || '')
+            const name = String(entry.name || (typeof entry.dataKey === 'function' ? entry.dataKey.name : entry.dataKey) || '')
             const value = entry.value
             const isResponseTime = name.toLowerCase().includes('response') || name.toLowerCase().includes('time')
             

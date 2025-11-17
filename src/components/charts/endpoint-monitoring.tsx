@@ -124,7 +124,9 @@ export function EndpointMonitoring({ endpointId, endpointName, timeRange = '1d' 
             const value = entry.value
             let displayValue = value
             
-            switch (entry.dataKey) {
+            const dataKey = typeof entry.dataKey === 'function' ? entry.dataKey.name : entry.dataKey
+            
+            switch (dataKey) {
               case 'uptime':
                 displayValue = `${value.toFixed(2)}%`
                 break
