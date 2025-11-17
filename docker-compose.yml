@@ -1,22 +1,6 @@
 version: '3.8'
 
-services:
-  db:
-    image: postgres:16
-    container_name: db_postgresql
-    environment:
-      POSTGRES_DB: monpi
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
+# SQLite uses file-based storage, no database container needed
+# This file is kept for compatibility but is not used with SQLite
+services: {}
+volumes: {}

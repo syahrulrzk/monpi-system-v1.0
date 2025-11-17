@@ -38,7 +38,8 @@ interface PerformanceChartsProps {
 type TimeRange = '1d' | '3d' | '7d' | '14d'
 
 export function PerformanceCharts({ data, timeRange: propTimeRange }: PerformanceChartsProps) {
-  const [timeRange, setTimeRange] = useState<TimeRange>(propTimeRange || '1d')
+  // Use the prop directly instead of maintaining internal state
+  const timeRange = propTimeRange || '1d'
   
   // Filter data based on selected time range
   const getFilteredData = () => {
@@ -476,7 +477,7 @@ export function PerformanceCharts({ data, timeRange: propTimeRange }: Performanc
               Performance Overview
             </CardTitle>
             <CardDescription>
-              Combined view of requests and response times ({timeRange === '1d' ? 'Today from 00:00' : timeRange === '3d' ? 'Last 3 days from 00:00' : timeRange === '7d' ? 'Last 7 days from 00:00' : 'Last 14 days from 00:00'})
+              Combined view of requests and response times ({propTimeRange === '1d' ? 'Today from 00:00' : propTimeRange === '3d' ? 'Last 3 days from 00:00' : propTimeRange === '7d' ? 'Last 7 days from 00:00' : 'Last 14 days from 00:00'})
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -536,8 +537,7 @@ export function PerformanceCharts({ data, timeRange: propTimeRange }: Performanc
                       fill: 'hsl(var(--chart-2))',
                       strokeWidth: 2,
                       r: 4,
-                      stroke: 'hsl(var(--background))',
-                      strokeWidth: 2
+                      stroke: 'hsl(var(--background))'
                     }}
                     activeDot={{
                       r: 8,

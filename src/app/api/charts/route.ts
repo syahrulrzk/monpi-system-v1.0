@@ -112,7 +112,7 @@ function generateHistoricalDataIfNeeded(timeRange: string): void {
       const requests = Math.floor(baseRequests * businessHourMultiplier * weekdayMultiplier * timeVariation * randomVariation / dataPointsNeeded)
       const responseTime = Math.floor(baseResponseTime * (2 - timeVariation) * randomVariation)
       
-      historicalDataStore.data.unshift({
+      historicalDataStore.data.push({
         timestamp: wibTime.iso,
         time: wibTime.time,
         date: wibTime.date,

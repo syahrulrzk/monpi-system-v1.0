@@ -14,24 +14,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "MONPI SYSTEM - FOR API",
+  description: "Real-time API endpoint monitoring and system health dashboard with auto-refresh capabilities.",
+  keywords: ["MONPI", "API", "Monitoring", "Dashboard", "System Health", "Next.js", "TypeScript"],
+  authors: [{ name: "MONPI Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "MONPI SYSTEM - FOR API",
+    description: "Real-time API endpoint monitoring and system health dashboard",
+    url: "/",
+    siteName: "MONPI",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "MONPI SYSTEM - FOR API",
+    description: "Real-time API monitoring system",
   },
 };
 
@@ -43,7 +43,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{ backgroundColor: 'white', color: 'black' }}
       >
         {children}
         <Toaster />

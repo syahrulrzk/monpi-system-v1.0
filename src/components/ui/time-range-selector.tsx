@@ -3,13 +3,15 @@
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock } from 'lucide-react'
 
+type TimeRange = '1d' | '3d' | '7d' | '14d'
+
 interface TimeRangeSelectorProps {
-  selectedRange: string
-  onRangeChange: (range: string) => void
+  selectedRange: TimeRange
+  onRangeChange: (range: TimeRange) => void
 }
 
 export function TimeRangeSelector({ selectedRange, onRangeChange }: TimeRangeSelectorProps) {
-  const timeRanges = [
+  const timeRanges: { value: TimeRange; label: string; description: string }[] = [
     { value: '1d', label: '1 Day', description: 'Today from 00:00' },
     { value: '3d', label: '3 Days', description: 'Last 3 days from 00:00' },
     { value: '7d', label: '7 Days', description: 'Last 7 days from 00:00' },

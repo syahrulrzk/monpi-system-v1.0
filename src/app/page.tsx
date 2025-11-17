@@ -58,13 +58,13 @@ export default function Dashboard() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null)
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>([])
-  const [lastRefresh, setLastRefresh] = useState<string>(new Date().toLocaleTimeString())
+  const [lastRefresh, setLastRefresh] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isConnected, setIsConnected] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState<string>('endpoints')
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
   const [selectedEndpoint, setSelectedEndpoint] = useState<ApiEndpoint | null>(null)
-  const [timeRange, setTimeRange] = useState<string>('1d') // Default to 1 day (24 hours)
+  const [timeRange, setTimeRange] = useState<'1d' | '3d' | '7d' | '14d'>('1d') // Default to 1 day (24 hours)
   const socketRef = useRef<Socket | null>(null)
 
   const fetchEndpointsData = async () => {
@@ -183,13 +183,16 @@ export default function Dashboard() {
     }
   }
 
-  const handleTimeRangeChange = async (newRange: string) => {
+  const handleTimeRangeChange = async (newRange: '1d' | '3d' | '7d' | '14d') => {
     setTimeRange(newRange)
     // Refresh all data when time range changes
     await fetchDashboardData()
   }
 
   useEffect(() => {
+    // Set initial last refresh time
+    setLastRefresh(new Date().toLocaleTimeString())
+    
     // Request notification permission
     if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
       Notification.requestPermission()
@@ -199,7 +202,9 @@ export default function Dashboard() {
     
     // Setup WebSocket connection for real-time updates
     try {
-    socketRef.current = io('http://localhost:3000', {
+      // Use the current host instead of localhost to allow connections from other devices
+      const host = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      socketRef.current = io(host, {
         path: '/api/socketio',
         transports: ['websocket', 'polling'],
         timeout: 5000,
@@ -334,18 +339,21 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Fixed Topbar */}
-      <div className="fixed top-0 left-0 right-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
+      <div className="fixed top-0 left-0 right-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 p-2 rounded-lg">
+                <Activity className="h-6 w-6 text-primary" />
+              </div>
               <div>
                 <h1 className="text-xl font-bold tracking-tight">MONPI SYSTEM</h1>
-                <p className="text-xs text-muted-foreground">Monitoring API Dashboard</p>
+                <p className="text-xs text-muted-foreground">API Monitoring Dashboard</p>
               </div>
             </div>
             {systemStatus && (
-              <div className="flex items-center gap-2 text-sm">
-                <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${systemStatus.serverStatus === 'online' ? 'bg-green-500' : 'bg-red-500'}`} />
                   <span className={`font-medium ${systemStatus.serverStatus === 'online' ? 'text-green-600' : 'text-red-600'}`}>
                     Server {systemStatus.serverStatus === 'online' ? 'Online' : 'Offline'}
@@ -354,10 +362,10 @@ export default function Dashboard() {
                     ({systemStatus.serverLatency}ms)
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
                   <span className="text-muted-foreground">
-                    {isConnected ? '🟢' : '🔴'}
+                    {isConnected ? 'Connected' : 'Disconnected'}
                   </span>
                 </div>
               </div>
@@ -367,26 +375,39 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content with padding for fixed topbar */}
-      <div className="flex-1 pt-24 pb-16"> {/* pt-24 for topbar, pb-16 for bottombar */}
+      <div className="flex-1 pt-20 pb-20"> {/* pt-20 for topbar, pb-20 for bottombar */}
         <div className="container mx-auto px-4 py-6">
           {/* Dashboard Title */}
-          <div className="mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="mb-8 bg-card border rounded-xl p-6 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div>
-                <h2 className="text-3xl font-bold tracking-tight">API Monitoring Dashboard</h2>
-                <p className="text-muted-foreground mt-1">Real-time API endpoint monitoring - Auto refresh every 30 seconds - Showing requests from last 24 hours</p>
+                <h2 className="text-3xl font-bold tracking-tight text-foreground">API Monitoring Dashboard</h2>
+                <p className="text-muted-foreground mt-2">Real-time monitoring of API endpoints with performance analytics and system health tracking</p>
+                <div className="flex flex-wrap items-center gap-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="text-muted-foreground">Auto refresh every 30 seconds</span>
+                  </div>
+                  <span className="text-muted-foreground hidden sm:block">•</span>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Showing requests from last 24 hours</span>
+                  </div>
+                </div>
               </div>
-              <TimeRangeSelector 
-                selectedRange={timeRange} 
-                onRangeChange={handleTimeRangeChange} 
-              />
+              <div className="flex-shrink-0">
+                <TimeRangeSelector 
+                  selectedRange={timeRange} 
+                  onRangeChange={handleTimeRangeChange} 
+                />
+              </div>
             </div>
           </div>
 
           {/* Status Cards */}
           {systemStatus && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <Card>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">System Health</CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
@@ -398,7 +419,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
                   <Zap className="h-4 w-4 text-muted-foreground" />
@@ -411,7 +432,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Error Rate</CardTitle>
                   <AlertTriangle className="h-4 w-4 text-muted-foreground" />
@@ -424,7 +445,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Avg Response Time</CardTitle>
                   <Clock className="h-4 w-4 text-muted-foreground" />
@@ -440,11 +461,15 @@ export default function Dashboard() {
           )}
 
           {/* Tabs */}
-          <Tabs defaultValue="endpoints" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="endpoints">API Endpoints</TabsTrigger>
-              <TabsTrigger value="charts">Performance Charts</TabsTrigger>
-              <TabsTrigger value="monitoring" className="flex items-center gap-2">
+          <Tabs defaultValue="endpoints" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 gap-2 bg-card p-1 rounded-lg shadow-sm">
+              <TabsTrigger value="endpoints" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                API Endpoints
+              </TabsTrigger>
+              <TabsTrigger value="charts" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                Performance Charts
+              </TabsTrigger>
+              <TabsTrigger value="monitoring" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2">
                 Endpoint Monitoring
                 {selectedEndpoint && (
                   <Badge variant="secondary" className="text-xs">
@@ -452,18 +477,20 @@ export default function Dashboard() {
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="logs">System Logs</TabsTrigger>
+              <TabsTrigger value="logs" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                System Logs
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="endpoints" className="space-y-4">
-              <Card>
+            <TabsContent value="endpoints" className="space-y-6">
+              <Card className="shadow-sm">
                 <CardHeader>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <CardTitle>API Endpoints Status</CardTitle>
                       <CardDescription>Monitor the status and performance of your endpoints</CardDescription>
                     </div>
-                    <Button onClick={smartRefresh} variant="outline" size="sm" disabled={isRefreshing}>
+                    <Button onClick={smartRefresh} variant="outline" size="sm" disabled={isRefreshing} className="shadow-sm">
                       <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                       {isRefreshing ? 'Refreshing...' : 'Refresh'}
                     </Button>
@@ -472,20 +499,20 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="rounded-md border">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-muted/50">
                         <TableRow>
-                          <TableHead>Endpoint Name</TableHead>
-                          <TableHead>URL</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Last Check</TableHead>
-                          <TableHead>Response Time</TableHead>
-                          <TableHead>Requests</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableHead className="font-semibold">Endpoint Name</TableHead>
+                          <TableHead className="font-semibold">URL</TableHead>
+                          <TableHead className="font-semibold">Status</TableHead>
+                          <TableHead className="font-semibold">Last Check</TableHead>
+                          <TableHead className="font-semibold">Response Time</TableHead>
+                          <TableHead className="font-semibold">Requests</TableHead>
+                          <TableHead className="text-right font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {endpoints.map((endpoint) => (
-                          <TableRow key={endpoint.id}>
+                          <TableRow key={endpoint.id} className="hover:bg-muted/50">
                             <TableCell className="font-medium">{endpoint.name}</TableCell>
                             <TableCell className="font-mono text-sm">{endpoint.url}</TableCell>
                             <TableCell>{getStatusBadge(endpoint.status)}</TableCell>
@@ -497,6 +524,7 @@ export default function Dashboard() {
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => handleViewDetails(endpoint)}
+                                className="shadow-sm"
                               >
                                 View Details
                               </Button>
@@ -510,12 +538,20 @@ export default function Dashboard() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="charts" className="space-y-4">
-              <PerformanceCharts data={chartData} timeRange={timeRange} />
+            <TabsContent value="charts" className="space-y-6">
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle>Performance Charts</CardTitle>
+                  <CardDescription>Visual analytics of API performance and request patterns</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PerformanceCharts data={chartData} timeRange={timeRange} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="monitoring" className="space-y-4" id="monitoring-section">
-              <Card>
+            <TabsContent value="monitoring" className="space-y-6" id="monitoring-section">
+              <Card className="shadow-sm">
                 <CardHeader>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
@@ -533,10 +569,11 @@ export default function Dashboard() {
                           variant="outline" 
                           size="sm"
                           onClick={() => setSelectedEndpoint(null)}
+                          className="shadow-sm"
                         >
                           Clear Selection
                         </Button>
-                        <Button onClick={smartRefresh} variant="outline" size="sm" disabled={isRefreshing}>
+                        <Button onClick={smartRefresh} variant="outline" size="sm" disabled={isRefreshing} className="shadow-sm">
                           <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                           {isRefreshing ? 'Refreshing...' : 'Refresh'}
                         </Button>
@@ -555,12 +592,13 @@ export default function Dashboard() {
                     <div className="text-center py-12">
                       <Activity className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                       <h3 className="text-lg font-semibold mb-2">No Endpoint Selected</h3>
-                      <p className="text-muted-foreground mb-4">
+                      <p className="text-muted-foreground mb-4 max-w-md mx-auto">
                         Go to the API Endpoints tab and click "View Details" on any endpoint to see detailed monitoring data.
                       </p>
                       <Button 
                         variant="outline" 
                         onClick={() => setActiveTab('endpoints')}
+                        className="shadow-sm"
                       >
                         View Endpoints
                       </Button>
@@ -570,30 +608,30 @@ export default function Dashboard() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="logs" className="space-y-4">
-              <Card>
+            <TabsContent value="logs" className="space-y-6">
+              <Card className="shadow-sm">
                 <CardHeader>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <CardTitle>System Logs</CardTitle>
                       <CardDescription>Real-time system events and API status changes</CardDescription>
                     </div>
-                    <Button onClick={smartRefresh} variant="outline" size="sm" disabled={isRefreshing}>
+                    <Button onClick={smartRefresh} variant="outline" size="sm" disabled={isRefreshing} className="shadow-sm">
                       <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                       {isRefreshing ? 'Refreshing Logs...' : 'Refresh Logs'}
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-3 max-h-96 overflow-y-auto rounded-md border p-2 bg-muted/10">
                     {systemLogs.length > 0 ? (
                       systemLogs.map((log) => (
-                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                          <div className="flex-shrink-0">
+                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors bg-background">
+                          <div className="flex-shrink-0 pt-0.5">
                             {getLogBadge(log.level)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
                               <span className="text-sm font-medium">{log.message}</span>
                               {log.endpoint && (
                                 <Badge variant="outline" className="text-xs">
@@ -621,17 +659,20 @@ export default function Dashboard() {
       </div>
 
       {/* Fixed Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>MONPI SYSTEM</span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm">
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Activity className="h-4 w-4 text-primary" />
+              <span className="font-medium">MONPI SYSTEM</span>
+              <span className="text-xs">| API Monitoring Dashboard</span>
             </div>
-            <div className="flex items-center justify-center text-sm text-muted-foreground">
+            <div className="flex items-center justify-center text-muted-foreground gap-1">
+              <Clock className="h-4 w-4" />
               <span>Last updated: {lastRefresh}</span>
             </div>
-            <div className="flex items-center justify-end text-xs text-muted-foreground">
-              <span>© 2025 MONPI SYSTEM. All rights reserved.</span>
+            <div className="flex items-center justify-end text-muted-foreground">
+              <span className="text-xs">© 2025 MONPI SYSTEM. All rights reserved.</span>
             </div>
           </div>
         </div>

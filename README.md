@@ -62,16 +62,12 @@ npm install
 
 2. **Database Setup**
 ```bash
-# Update your .env file with PostgreSQL connection string
-DATABASE_URL="postgresql://username:password@localhost:5432/api_monitoring"
+# Run the SQLite setup script
+./setup-sqlite.sh
 
-# Generate Prisma client
+# Or manually run the steps:
 npm run db:generate
-
-# Push database schema
 npm run db:push
-
-# Seed database with sample data
 npm run db:seed
 ```
 
@@ -180,7 +176,8 @@ The logs section offers:
 
 ### Environment Variables
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/api_monitoring"
+# SQLite uses file-based storage, no DATABASE_URL needed
+API_BASE_URL="http://localhost:3000"
 NODE_ENV="production"
 ```
 
@@ -218,4 +215,4 @@ This project is licensed under the MIT License.
 
 ---
 
-Built with ❤️ for modern API monitoring needs. Powered by Next.js and PostgreSQL 🚀
+Built with ❤️ for modern API monitoring needs. Powered by Next.js and SQLite 🚀
